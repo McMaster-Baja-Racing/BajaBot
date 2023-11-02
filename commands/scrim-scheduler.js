@@ -10,12 +10,11 @@ const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_
 
 // Function to send a reminder message in the channel
 async function sendChannelReminder(scheduledScrim) {
-    console.log("in sendchannelreminder");
     const channel = await client.channels.fetch(scheduledScrim.channel);
-    console.log('Fetched channel:', channel.id); // Log the channel ID for debugging
-    const user = await client.users.fetch(scheduledScrim.user);
+    //console.log('Fetched channel:', channel.id); // Log the channel ID for debugging
+    const role = scheduledScrim.role;
     // Send the reminder message in the channel with user ping
-    await channel.send(`<@${user.id}>: ${scheduledScrim.content}`);
+    await channel.send(`<@&${role}>: ${scheduledScrim.content}`);
 }
 
 client.once('ready', () => {
@@ -31,7 +30,7 @@ module.exports = {
         .addChannelOption(option => option.setName('channel').setDescription('The channel the reminder will be sent to').setRequired(true))
         .addStringOption(option => option.setName('date').setDescription('The date the reminder will be sent').setRequired(true))
         .addStringOption(option => option.setName('message').setDescription('The message that will be included').setRequired(true))
-        .addUserOption(option => option.setName('user').setDescription('The user to ping for the reminder').setRequired(true)
+        .addRoleOption(option => option.setName('role').setDescription('The role to ping for the reminder').setRequired(true)
     ),
 
     async execute(interaction) {
@@ -40,18 +39,18 @@ module.exports = {
         const channel = interaction.options.getChannel('channel');
         const date = chrono.parseDate(interaction.options.getString('date'));
         const message = interaction.options.getString('message');
-        const user = interaction.options.getUser('user');
+        const role = interaction.options.getRole('role');
 
         try {
             const newScrim = new scheduledScrimSchema({
                 date: new Date(date),
                 content: message,
                 channel: channel.id,
-                user: user.id,
+                role: role.id,
             });
 
             await newScrim.save();
-            console.log('Scrim saved successfully:', newScrim);
+            //console.log('Scrim saved successfully:', newScrim);
 
             // Schedule the reminder for this scrim
             const now = new Date();
@@ -61,9 +60,9 @@ module.exports = {
                 });
             }
 
-            // Send a confirmation DM to the user
-            user.send(`You have a scrim scheduled: "${message}" in ${channel} on ${date}`);
-
+            // Send a confirmation DM to the user who wrote the command
+            interaction.user.send(`You have a scrim scheduled: "${message}" in ${channel} on ${date}`);
+            // The little only you can see this thing that the bot will send
             return interaction.reply({ content: `Scheduled "${message}" in ${channel} on ${date}`, ephemeral: true });
 
         } catch (error) {

@@ -15,8 +15,7 @@ const scheduledSchema = new mongoose.Schema({
     },
     content: reqString,
     channel: reqString,
-    user: reqString,
-    //role: reqString,
+    role: reqString,
 }, { timestamps: true });
 
 const ScheduledScrim = mongoose.model('Scrims', scheduledSchema);
