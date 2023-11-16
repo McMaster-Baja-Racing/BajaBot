@@ -1,10 +1,10 @@
 // Require the necessary default, discordJS and mongo classes
 const fs = require('fs');
-const { Client, Collection, Intents, MessageEmbed } = require('discord.js');
+const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js');
 const { token } = require('./config.json');
 
 // Create a new client instance
-const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds], partials: [Partials.Channel] });
 
 // Create commands list
 client.commands = new Collection();
@@ -18,26 +18,17 @@ for (const file of commandFiles) {
 	client.commands.set(command.data.name, command);
 }
 
-// When the client is ready, run this code (only once)
-client.once('ready', () => {
-	console.log('Ready!');
-});
+const eventFiles = fs.readdirSync('./events').filter(file => file.endsWith('.js'));
 
-// Run all slash commands here
-client.on('interactionCreate', async interaction => {
-	if (!interaction.isCommand()) return;
-
-	const command = client.commands.get(interaction.commandName);
-
-	if (!command) return;
-
-	try {
-		await command.execute(interaction);
-	} catch (error) {
-		console.error(error);
-		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+// Loop through the event files and add them to the events list
+for (const file of eventFiles) {
+	const event = require(`./events/${file}`);
+	if (event.once) {
+		client.once(event.name, (...args) => event.execute(...args));
+	} else {
+		client.on(event.name, (...args) => event.execute(...args));
 	}
-});
+}
 
 // Login to Discord with your client's token
 client.login(token);
