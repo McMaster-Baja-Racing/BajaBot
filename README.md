@@ -14,4 +14,4 @@ Where the clientId is the ID of your bot, guildId is of your server and token is
 
 2. Then, run `npm i` in order to install all node modules
 3. Run deploy-commands.js to send the commands to the discord server.
-4. Host index.js as long as you'd like to run the discord bot
+4. Run `npm start` to begin hosting the bot
