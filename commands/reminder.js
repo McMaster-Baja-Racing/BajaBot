@@ -24,8 +24,8 @@ client.login(config.token);
 
 module.exports = {
     data: new SlashCommandBuilder()
-    .setName('scrim-scheduler')
-    .setDescription('Schedule a scrim with an automatic reminder!')
+    .setName('reminder')
+    .setDescription('Schedule an automatic reminder!')
     .addChannelOption(option => option.setName('channel').setDescription('The channel the reminder will be sent to').setRequired(true))
     .addStringOption(option => option.setName('date').setDescription('The date the reminder will be sent').setRequired(true))
     .addStringOption(option => option.setName('message').setDescription('The message that will be included').setRequired(true))
@@ -35,8 +35,8 @@ module.exports = {
             {name: 'Daily',value: 'daily'},
             {name: 'Weekly', value:'weekly'},
             {name: 'Monthly', value: 'monthly'},
-            {name:'None', value:'none'},
-            {name:'Test', value:'test'}
+            {name:'Bi-weekly', value:'biweekly'},
+            {name:'None', value:'none'}
         )
     ),
 
@@ -80,13 +80,13 @@ module.exports = {
             });
 
             // Send a confirmation DM to the user who wrote the command
-            interaction.user.send(`You have a scrim scheduled: "${message}" in ${channel} on ${date}`);
+            interaction.user.send(`You have a reminder scheduled: "${message}" in ${channel} on ${date}`);
             // The little 'only you can see this' thing that the bot will send
             return interaction.reply({ content: `Scheduled "${message}" in ${channel} on ${date}`, ephemeral: true });
 
         } catch (error) {
-            console.error('Error saving scrim:', error);
-            return interaction.reply({ content: 'An error occurred while scheduling the scrim.', ephemeral: true });
+            console.error('Error saving reminder:', error);
+            return interaction.reply({ content: 'An error occurred while scheduling the reminder.', ephemeral: true });
         }
 
     },
@@ -114,8 +114,8 @@ function updateDateBasedOnRecurrence(scrim, recurrence) {
         case 'monthly':
             scrim.date.setMonth(scrim.date.getMonth() + 1);
             break;
-        case 'test':// Will recur every 5 min just to test
-            scrim.date.setMinutes(scrim.date.getMinutes() + 5);
+        case 'biweekly':
+            scrim.date.setDate(scrim.date.getDate() + 14);
             break;
         default:
             break;
