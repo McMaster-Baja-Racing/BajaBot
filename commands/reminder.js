@@ -17,7 +17,7 @@ async function sendChannelReminder(scheduledScrim) {
 }
 
 // Function to schedule reminders from the database at startup
-async function scheduleRemindersAtStartup() {
+async function startupReminders() {
     try {
         await db; // Wait for the database connection
 
@@ -28,30 +28,15 @@ async function scheduleRemindersAtStartup() {
 
         // Schedule each future reminder
         futureReminders.forEach((reminder) => {
-            schedule.scheduleJob(reminder.date, async () => {
-                sendChannelReminder(reminder);
-
-                if (reminder.recurrence === 'none') {
-                    // Remove the non-recurring reminder from the database after sending
-                    await scheduledScrimSchema.findByIdAndDelete(reminder._id);
-                } else {
-                    // Update the date for recurring reminders
-                    updateDateBasedOnRecurrence(reminder, reminder.recurrence);
-                    await reminder.save();
-                    // Schedule the recursive function for the next occurrence
-                    scheduleRecurringJob(reminder, reminder.recurrence);
-                }
-            });
+            scheduleReminder(reminder, reminder.recurrence);
         });
-
         console.log('Scheduled reminders at startup.');
-
     } catch (error) { console.error('Error scheduling reminders at startup:', error); }
 }
 
 client.once('ready', () => {
     console.log(`Logged in as ${client.user.tag}`);
-    scheduleRemindersAtStartup();
+    startupReminders();
 });
 
 client.login(config.token);
@@ -64,12 +49,12 @@ module.exports = {
     .addStringOption(option => option.setName('date').setDescription('The date the reminder will be sent').setRequired(true))
     .addStringOption(option => option.setName('message').setDescription('The message that will be included').setRequired(true))
     .addRoleOption(option => option.setName('role').setDescription('The role to ping for the reminder').setRequired(true))
-    .addStringOption(option => option.setName('recurrence').setDescription('Choose the recurrence').setRequired(true)
+    .addStringOption(option => option.setName('recurrence').setDescription('Choose how often to send the reminder (choose none to only send it once)').setRequired(true)
         .addChoices(
             {name: 'Daily',value: 'daily'},
             {name: 'Weekly', value:'weekly'},
             {name: 'Monthly', value: 'monthly'},
-            {name:'Bi-weekly', value:'biweekly'},
+            {name:'Bi-weekly (once every two weeks)', value:'biweekly'},
             {name:'None', value:'none'}
         )
     ),
@@ -97,21 +82,7 @@ module.exports = {
             await newReminder.save();
 
             // Schedule the reminder for this scrim
-            const now = new Date();
-            schedule.scheduleJob(new Date(date), async () => {
-                sendChannelReminder(newReminder);
-
-                if (recurrence == 'none') {
-                    // Remove the non-recurring reminder from the database after sending
-                    await scheduledScrimSchema.findByIdAndDelete(newReminder._id);
-                } else {
-                    // Update the date for recurring reminders
-                    updateDateBasedOnRecurrence(newReminder, recurrence);
-                    await newReminder.save();
-                    // Schedule the recursive function for the next occurrence
-                    scheduleRecurringJob(newReminder, recurrence);
-                }
-            });
+            await scheduleReminder(newReminder, recurrence);
 
             // Send a confirmation DM to the user who wrote the command
             interaction.user.send(`You have a reminder scheduled: "${message}" in ${channel} on ${date}`);
@@ -130,13 +101,13 @@ module.exports = {
 function scheduleRecurringJob(reminder, recurrence) {
     schedule.scheduleJob(reminder.date, async () => {
         sendChannelReminder(reminder);
-        updateDateBasedOnRecurrence(reminder, recurrence);
+        updateDate(reminder, recurrence);
         await reminder.save();
         scheduleRecurringJob(reminder, recurrence);
     });
 }
 
-function updateDateBasedOnRecurrence(reminder, recurrence) {
+function updateDate(reminder, recurrence) {
     // Update the date based on the recurrence type
     switch (recurrence) {
         case 'daily':
@@ -153,5 +124,20 @@ function updateDateBasedOnRecurrence(reminder, recurrence) {
             break;
         default:
             break;
+    }
+}
+
+// Method to handle scheduling logic for reminders
+async function scheduleReminder(reminder, recurrence) {
+    sendChannelReminder(reminder);
+    if (recurrence === 'none') {
+        // Remove the non-recurring reminder from the database after sending
+        await scheduledScrimSchema.findByIdAndDelete(reminder._id);
+    } else {
+        // Update the date for recurring reminders
+        updateDate(reminder, recurrence);
+        await reminder.save();
+        // Schedule the recursive function for the next occurrence
+        scheduleRecurringJob(reminder, recurrence);
     }
 }
