@@ -5,7 +5,7 @@ module.exports = {
     name: 'messageCreate',
     execute(message, client) {
         const users = {
-            '562741216840515594': [
+            '': [
               "Hewwo Mawk! OwO How awe you todaaay? (*＾▽＾)ﾉ",
               "Haiii Mawkie~ (*≧ω≦) Teehee, just wanted to send chu wots of wuv and hugs! UwU",
               "Hewwooo Mawk-senpai! (* >ω<) Just wanted to remind chu dat chu awe amazying~ OwO",
@@ -27,8 +27,8 @@ module.exports = {
               "Haiii Mawkie-chan! (ﾉ^ヮ^)ﾉ*:・ﾟ✧ Jus wanted to say chu're amazing and chu got this! UwU",
               "Nyaa~ Mawk-kun! (´• ω •`)ﾉ Jus wanted to remind chu that chu are super special! UwU"
             ],
-
-            '528410587093401603': [
+//562741216840515594
+            '': [
               "Hewwooo Peter-kun! (｡♥‿♥｡) Jus wanted to say chu make my heart go doki doki~ OwO",
               "Haiii Peter-senpai! (⁄ ⁄•⁄ω⁄•⁄ ⁄)⁄ Teehee, chu awe so kawaii~ UwU",
               "Hewwoooo Peter! (* >ω<) Just wanted to remind chu dat chu awe amazying~ OwO",
@@ -50,8 +50,8 @@ module.exports = {
               "Nyaa~ Peter-senpai! (⁄≧◡≦)/ Jus wanted to brighten your day with a sprinkle of happiness! UwU",
               "Hewwo Peter! (*^‿^*) Sending chu a virtual cupcake filled with love and uwu! OwO",
             ],
-
-            '544341005420199937': [
+//528410587093401603
+            '': [
               "Hewwooo Salma-chan! (｡♥‿♥｡) Jus wanted to say chu make my heart go doki doki~ OwO",
               "Haiii Salma-senpai! (⁄ ⁄•⁄ω⁄•⁄ ⁄)⁄ Teehee, chu awe so kawaii~ UwU",
               "Hewwoooo Salma! (* >ω<) Just wanted to remind chu dat chu awe amazying~ OwO",
@@ -73,8 +73,8 @@ module.exports = {
               "Nyaa~ Salma-senpai! (⁄≧◡≦)/ Jus wanted to brighten your day with a sprinkle of happiness! UwU",
               "Hewwo Salma! (*^‿^*) Sending chu a virtual cupcake filled with love and uwu! OwO",
             ],
-
-            '654827963677671428': [
+//544341005420199937
+            '': [
               "Hewwooo Maryam-chan! (｡♥‿♥｡) Jus wanted to say chu make my heart go doki doki~ OwO",
               "Haiii Maryam-senpai! (⁄ ⁄•⁄ω⁄•⁄ ⁄)⁄ Teehee, chu awe so kawaii~ UwU",
               "Hewwoooo Maryam! (* >ω<) Just wanted to remind chu dat chu awe amazying~ OwO",
@@ -97,6 +97,7 @@ module.exports = {
               "Hewwo Maryam! (*^‿^*) Sending chu a virtual cupcake filled with love and uwu! OwO",
             ]
         };
+//654827963677671428
 
         const channelId = '1022004325326782494';
 
