@@ -12,10 +12,10 @@ module.exports = {
             await interaction.reply({ content: "Fetching data from the spreadsheet...", ephemeral: true });
 
             const threadIds = {
-                'Chassis': '1192481865056137247',
-                'Controls': '1192508568927219773', 
-                'Drivetrain': '1192666172664053891',
-                'Suspension': '1192708198881308772',
+                'Chassis': '', //1192481865056137247
+                'Controls': '', //1192508568927219773
+                'Drivetrain': '', //1192666172664053891
+                'Suspension': '', //1192708198881308772
                 'DAQ': '1192706895614582885',
             };
 
@@ -47,7 +47,6 @@ module.exports = {
             
                 const sheetData = response.data.values.slice(1);
             
-                console.log(sheetData);
             
                 const currentDate = new Date();
                 currentDate.setHours(0, 0, 0, 0);
@@ -67,8 +66,8 @@ module.exports = {
                     'Status': row[3],
                     'Assigned To': row[4],
                     'Notes': row[5],
+                    'ID': row[6],
                 }));
-                console.log(sheetRows);
             
                 const sheetColor = sheetColorMap[sheetName];
             
@@ -81,9 +80,6 @@ module.exports = {
                     const dueDate = new Date(row['Due Date']);
                     return (dueDate >= nextWeekStartDate && dueDate < nextWeekEndDate);
                 });
-            
-                console.log(thisWeekStartDate, thisWeekEndDate, nextWeekStartDate, nextWeekEndDate);
-
 
                 const thisWeekFormattedData = formatTasks(thisWeekTasks, sheetName, sheetColor, 'This Week');
                 const nextWeekFormattedData = formatTasks(nextWeekTasks, sheetName, sheetColor, 'Next Week');
@@ -115,15 +111,17 @@ function formatTasks(tasks, sheetName, sheetColor, timeFrame) {
     const embed = new EmbedBuilder()
         .setColor(sheetColor)
         .setURL('https://docs.google.com/spreadsheets/d/1pb2W0BvAOMFeM4AXIbLzxM0dWJGYtqago8_8J4S5wEI/edit#gid=490843265')
-        .setAuthor({ name: 'To-Do Reminder', iconURL: 'https://i.imgur.com/ALT9CPo.jpg' })
+        .setAuthor({ name: 'To-Do Reminder', iconURL: 'https://i.imgur.com/ALT9CPo.jpg'})
+        .setThumbnail('https://i.imgur.com/ALT9CPo.jpg')
         .setTitle(`${sheetName}: ${timeFrame}`)
         .addFields(
             tasks.map(row => ({
-                name: `__**${row.Task}**__`,
-                value: `> **Start Date:** ${row['Start Date']}\n> **Due Date:** ${row['Due Date']}\n> **Status:** ${row.Status}\n> **Assigned To:** ${row['Assigned To']}\n> **Notes:** ${row.Notes}`,
+                name: timeFrame.toLowerCase() === 'next week' ? '\u200B' : `__**${row.Task}**__`,
+                value: timeFrame.toLowerCase() === 'next week' ? `     ${row.Task}     ` : `**Task ID:** ${row['ID']}\n> **Start Date:** ${row['Start Date']}\n> **Due Date:** ${row['Due Date']}\n> **Status:** ${row.Status}\n> **Assigned To:** ${row['Assigned To']}\n> **Notes:** ${row.Notes}`,
+                inline: timeFrame.toLowerCase() === 'next week',
             }))
         )
-        .setFooter({ text: `Try to get these tasks done ${timeFrame.toLowerCase()}!` });
+        .setFooter({ text: timeFrame.toLowerCase() === 'next week' ? `Prepare to get these tasks done next week!` : `Try to get these tasks done ${timeFrame.toLowerCase()}!` });
 
     return embed;
 }
