@@ -52,24 +52,29 @@ module.exports = {
 
                 const formatTasks = (tasks, includeDetails = true) => {
                     const embed = new EmbedBuilder()
-                        .setColor(sheetColorMap[sheetName] || 0xFF0000);
+                    .setColor(sheetColorMap[sheetName])
+                    .setURL('https://discord.js.org/')
+                    .setAuthor({ name: 'To-Do Reminder', iconURL: 'https://i.imgur.com/ALT9CPo.jpg' })
                 
                         if (includeDetails) {
-                            embed.setTitle(`To-Do for ${sheetName} This Week`)
+                            embed.setTitle(`${sheetName}: This Week`) 
                                 .addFields(
                                     tasks.map(row => ({
-                                        name: `${row.Task}`,
-                                        value: `**Due Date:** ${row['Due Date']}\n**Status:** ${row.Status}\n**Assigned To:** ${row['Assigned To']}\n**Notes:** ${row.Notes}`
+                                        name: `__**${row.Task}**__`,
+                                        value: `> **Due Date:** ${row['Due Date']}\n> **Status:** ${row.Status}\n> **Assigned To:** ${row['Assigned To']}\n> **Notes:** ${row.Notes}`,
                                     }))
-                                );
+                                )
+                                .setFooter({ text: 'Try to get these tasks done this week!' });
                         } else {
-                            embed.setTitle(`${sheetName} tasks to prepare for next week`)
+                            embed.setTitle(`${sheetName}: Next Week`)
                                 .addFields(
                                     tasks.map(row => ({
-                                        name: `${row.Task}`,
-                                        value: '\u200B'
+                                        name: '\u200B',
+                                        value: `     ${row.Task}     `,
+                                        inline: true
                                     }))
-                                );
+                                )
+                                .setFooter({ text: 'Prepare to get these tasks done next week!' });
                         }
                 
                     return embed;
