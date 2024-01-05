@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const axios = require('axios');
+const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -12,28 +13,36 @@ module.exports = {
 
             const sheetNames = ['Chassis', 'Controls', 'Drivetrain', 'Suspension', 'DAQ'];
 
-            // Array to store messages for each tab
-            const responseMessages = [];
+            // Array to store embeds for each tab
+            const responseEmbeds = [];
+
+            const sheetColorMap = {
+                'Chassis': 0x800080, // purple
+                'Controls': 0x008080, // teal
+                'Drivetrain': 0xFFFF00, // yellow
+                'Suspension': 0x00FF00, // green
+                'DAQ': 0x0000FF, // blue
+            };
 
             for (const sheetName of sheetNames) {
                 const response = await axios.get(`https://sheetdb.io/api/v1/trx2ey55em789?sheet=${sheetName}`);
 
-                // Date stuff
                 const currentDate = new Date();
+                currentDate.setHours(0, 0, 0, 0);
                 const thisWeekStartDate = new Date(currentDate);
-                thisWeekStartDate.setHours(0, 0, 0, 0);
-                thisWeekStartDate.setDate(currentDate.getDate() - currentDate.getDay());
-                const nextWeekStartDate = new Date(thisWeekStartDate);
-                nextWeekStartDate.setDate(thisWeekStartDate.getDate() + 7);
+                const thisWeekEndDate = new Date(currentDate);
+                thisWeekEndDate.setDate(currentDate.getDate() + (7 - currentDate.getDay()));
+                const nextWeekStartDate = new Date(thisWeekEndDate);
+                nextWeekStartDate.setDate(thisWeekEndDate.getDate() + 1);
 
                 const sheetData = response.data.filter(row => {
                     const dueDate = new Date(row['Due Date']);
-                    return dueDate >= thisWeekStartDate && dueDate < nextWeekStartDate;
+                    return (dueDate >= thisWeekStartDate && dueDate <= thisWeekEndDate) || (dueDate >= nextWeekStartDate && dueDate < new Date(nextWeekStartDate.getTime() + 7 * 24 * 60 * 60 * 1000));
                 });
 
                 const thisWeekTasks = sheetData.filter(row => {
                     const dueDate = new Date(row['Due Date']);
-                    return dueDate >= thisWeekStartDate && dueDate < nextWeekStartDate;
+                    return dueDate >= thisWeekStartDate && dueDate <= thisWeekEndDate;
                 });
 
                 const nextWeekTasks = sheetData.filter(row => {
@@ -41,21 +50,43 @@ module.exports = {
                     return dueDate >= nextWeekStartDate && dueDate < new Date(nextWeekStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
                 });
 
-                const formatTasks = (tasks) => {
-                    return tasks.map(row => `**Task:** ${row.Task}\n**Due Date:** ${row['Due Date']}\n**Status:** ${row.Status}\n**Assigned To:** ${row['Assigned To']}\n**Notes:** ${row.Notes}`).join('\n\n');
+                const formatTasks = (tasks, includeDetails = true) => {
+                    const embed = new EmbedBuilder();
+
+                    if (includeDetails) {
+                        tasks.forEach(row => {
+                            embed.addFields(
+                                { name: `${row.Task}`, value: `**Due Date:** ${row['Due Date']}\n**Status:** ${row.Status}\n**Assigned To:** ${row['Assigned To']}\n**Notes:** ${row.Notes}` }
+                            );
+                        });
+                    } else {
+                        tasks.forEach(row => {
+                            embed.addFields({ name: `${row.Task}`, value: '\u200B' });
+                        });
+                    }
+
+                    return embed;
                 };
 
                 const thisWeekFormattedData = formatTasks(thisWeekTasks);
                 const nextWeekFormattedData = formatTasks(nextWeekTasks);
 
-                if (thisWeekFormattedData.length > 0 || nextWeekFormattedData.length > 0) {
-                    responseMessages.push(`**To-Do for ${sheetName}:**\n\n**This Week:**\n${thisWeekFormattedData}\n\n**Next Week:**\n${nextWeekFormattedData}`);
-                }
+                // Skip checking if there are fields in the formatted data
+                thisWeekFormattedData.setColor(sheetColorMap[sheetName] || 0xFF0000)
+                    .setTitle(`To-Do for ${sheetName} This Week`)
+                    .setFooter({ text: 'foot' });
+                responseEmbeds.push(thisWeekFormattedData);
+
+                // Skip checking if there are fields in the formatted data
+                nextWeekFormattedData.setColor(sheetColorMap[sheetName] || 0xFF0000)
+                    .setTitle(`${sheetName} tasks to prepare for next week`)
+                    .setFooter({ text: 'foot' });
+                responseEmbeds.push(nextWeekFormattedData);
             }
 
-            // Send each message separately -- in future want to send them to the respective channels
-            for (const message of responseMessages) {
-                await interaction.followUp(message);
+            // Send each embed separately -- in the future, you may want to send them to the respective channels
+            for (const embed of responseEmbeds) {
+                await interaction.followUp({ embeds: [embed] });
             }
         } catch (error) {
             console.error('Error fetching data from SheetDB:', error);
