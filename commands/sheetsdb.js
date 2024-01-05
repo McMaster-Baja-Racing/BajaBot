@@ -17,11 +17,11 @@ module.exports = {
             const responseEmbeds = [];
 
             const sheetColorMap = {
-                'Chassis': 0x800080, // purple
-                'Controls': 0x008080, // teal
-                'Drivetrain': 0xFFFF00, // yellow
-                'Suspension': 0x00FF00, // green
-                'DAQ': 0x0000FF, // blue
+                'Chassis': 0x71368A, // purple
+                'Controls': 0x1ABC9C, // turquoise
+                'Drivetrain': 0xF1C40F, // yellow
+                'Suspension': 0x2ECC71, // green
+                'DAQ': 0x3498DB, // blue
             };
 
             for (const sheetName of sheetNames) {
@@ -51,40 +51,38 @@ module.exports = {
                 });
 
                 const formatTasks = (tasks, includeDetails = true) => {
-                    const embed = new EmbedBuilder();
-
-                    if (includeDetails) {
-                        tasks.forEach(row => {
-                            embed.addFields(
-                                { name: `${row.Task}`, value: `**Due Date:** ${row['Due Date']}\n**Status:** ${row.Status}\n**Assigned To:** ${row['Assigned To']}\n**Notes:** ${row.Notes}` }
-                            );
-                        });
-                    } else {
-                        tasks.forEach(row => {
-                            embed.addFields({ name: `${row.Task}`, value: '\u200B' });
-                        });
-                    }
-
+                    const embed = new EmbedBuilder()
+                        .setColor(sheetColorMap[sheetName] || 0xFF0000);
+                
+                        if (includeDetails) {
+                            embed.setTitle(`To-Do for ${sheetName} This Week`)
+                                .addFields(
+                                    tasks.map(row => ({
+                                        name: `${row.Task}`,
+                                        value: `**Due Date:** ${row['Due Date']}\n**Status:** ${row.Status}\n**Assigned To:** ${row['Assigned To']}\n**Notes:** ${row.Notes}`
+                                    }))
+                                );
+                        } else {
+                            embed.setTitle(`${sheetName} tasks to prepare for next week`)
+                                .addFields(
+                                    tasks.map(row => ({
+                                        name: `${row.Task}`,
+                                        value: '\u200B'
+                                    }))
+                                );
+                        }
+                
                     return embed;
                 };
 
                 const thisWeekFormattedData = formatTasks(thisWeekTasks);
-                const nextWeekFormattedData = formatTasks(nextWeekTasks);
+                const nextWeekFormattedData = formatTasks(nextWeekTasks, false);
 
-                // Skip checking if there are fields in the formatted data
-                thisWeekFormattedData.setColor(sheetColorMap[sheetName] || 0xFF0000)
-                    .setTitle(`To-Do for ${sheetName} This Week`)
-                    .setFooter({ text: 'foot' });
                 responseEmbeds.push(thisWeekFormattedData);
-
-                // Skip checking if there are fields in the formatted data
-                nextWeekFormattedData.setColor(sheetColorMap[sheetName] || 0xFF0000)
-                    .setTitle(`${sheetName} tasks to prepare for next week`)
-                    .setFooter({ text: 'foot' });
                 responseEmbeds.push(nextWeekFormattedData);
             }
 
-            // Send each embed separately -- in the future, you may want to send them to the respective channels
+            // Send each embed separately 
             for (const embed of responseEmbeds) {
                 await interaction.followUp({ embeds: [embed] });
             }
