@@ -11,7 +11,14 @@ module.exports = {
         try {
             await interaction.reply({ content: "Fetching data from the spreadsheet...", ephemeral: true });
 
-            const sheetNames = ['Chassis', 'Controls', 'Drivetrain', 'Suspension', 'DAQ'];
+            // Define the thread IDs for each sheet
+            const threadIds = {
+                'Chassis': '1192481865056137247',
+                'Controls': '1192508568927219773', 
+                'Drivetrain': '1192666172664053891',
+                'Suspension': '1192708198881308772',
+                'DAQ': '1192706895614582885',
+            };
 
             // Array to store embeds for each tab
             const responseEmbeds = [];
@@ -24,7 +31,7 @@ module.exports = {
                 'DAQ': 0x3498DB, // blue
             };
 
-            for (const sheetName of sheetNames) {
+            for (const sheetName of Object.keys(threadIds)) {
                 const response = await axios.get(`https://sheetdb.io/api/v1/trx2ey55em789?sheet=${sheetName}`);
 
                 const currentDate = new Date();
@@ -52,44 +59,54 @@ module.exports = {
 
                 const formatTasks = (tasks, includeDetails = true) => {
                     const embed = new EmbedBuilder()
-                    .setColor(sheetColorMap[sheetName])
-                    .setURL('https://discord.js.org/')
-                    .setAuthor({ name: 'To-Do Reminder', iconURL: 'https://i.imgur.com/ALT9CPo.jpg' })
-                
-                        if (includeDetails) {
-                            embed.setTitle(`${sheetName}: This Week`) 
-                                .addFields(
-                                    tasks.map(row => ({
-                                        name: `__**${row.Task}**__`,
-                                        value: `> **Due Date:** ${row['Due Date']}\n> **Status:** ${row.Status}\n> **Assigned To:** ${row['Assigned To']}\n> **Notes:** ${row.Notes}`,
-                                    }))
-                                )
-                                .setFooter({ text: 'Try to get these tasks done this week!' });
-                        } else {
-                            embed.setTitle(`${sheetName}: Next Week`)
-                                .addFields(
-                                    tasks.map(row => ({
-                                        name: '\u200B',
-                                        value: `     ${row.Task}     `,
-                                        inline: true
-                                    }))
-                                )
-                                .setFooter({ text: 'Prepare to get these tasks done next week!' });
-                        }
-                
+                        .setColor(sheetColorMap[sheetName])
+                        .setURL('https://docs.google.com/spreadsheets/d/1pb2W0BvAOMFeM4AXIbLzxM0dWJGYtqago8_8J4S5wEI/edit#gid=0')
+                        .setAuthor({ name: 'To-Do Reminder', iconURL: 'https://i.imgur.com/ALT9CPo.jpg' })
+
+                    if (includeDetails) {
+                        embed.setTitle(`${sheetName}: This Week`)
+                            .addFields(
+                                tasks.map(row => ({
+                                    name: `__**${row.Task}**__`,
+                                    value: `> **Due Date:** ${row['Due Date']}\n> **Status:** ${row.Status}\n> **Assigned To:** ${row['Assigned To']}\n> **Notes:** ${row.Notes}`,
+                                }))
+                            )
+                            .setFooter({ text: 'Try to get these tasks done this week!' });
+                    } else {
+                        embed.setTitle(`${sheetName}: Next Week`)
+                            .addFields(
+                                tasks.map(row => ({
+                                    name: '\u200B',
+                                    value: `     ${row.Task}     `,
+                                    inline: true
+                                }))
+                            )
+                            .setFooter({ text: 'Prepare to get these tasks done next week!' });
+                    }
+
                     return embed;
                 };
 
                 const thisWeekFormattedData = formatTasks(thisWeekTasks);
                 const nextWeekFormattedData = formatTasks(nextWeekTasks, false);
 
-                responseEmbeds.push(thisWeekFormattedData);
-                responseEmbeds.push(nextWeekFormattedData);
+                responseEmbeds.push({ sheetName, formattedData: thisWeekFormattedData });
+                responseEmbeds.push({ sheetName, formattedData: nextWeekFormattedData });
             }
 
-            // Send each embed separately 
-            for (const embed of responseEmbeds) {
-                await interaction.followUp({ embeds: [embed] });
+            // Send each embed to the corresponding thread
+            for (const { sheetName, formattedData } of responseEmbeds) {
+                const threadId = threadIds[sheetName];
+                if (threadId) {
+                    const thread = await interaction.channel.threads.fetch(threadId);
+                    if (thread) {
+                        await thread.send({ embeds: [formattedData] });
+                    } else {
+                        console.error(`Thread not found for sheet: ${sheetName}`);
+                    }
+                } else {
+                    console.error(`Thread ID not defined for sheet: ${sheetName}`);
+                }
             }
         } catch (error) {
             console.error('Error fetching data from SheetDB:', error);
