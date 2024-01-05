@@ -31,10 +31,25 @@ module.exports = {
                     return dueDate >= thisWeekStartDate && dueDate < nextWeekStartDate;
                 });
 
-                const formattedData = sheetData.map(row => `**Subteam:** ${row.Subteam}\n**Task:** ${row.Task}\n**Due Date:** ${row['Due Date']}\n**Status:** ${row.Status}\n**Assigned To:** ${row['Assigned To']}\n**Notes:** ${row.Notes}`).join('\n\n');
+                const thisWeekTasks = sheetData.filter(row => {
+                    const dueDate = new Date(row['Due Date']);
+                    return dueDate >= thisWeekStartDate && dueDate < nextWeekStartDate;
+                });
 
-                if (formattedData.length > 0) {
-                    responseMessages.push(`**Items for ${sheetName}:**\n\n${formattedData}`);
+                const nextWeekTasks = sheetData.filter(row => {
+                    const dueDate = new Date(row['Due Date']);
+                    return dueDate >= nextWeekStartDate && dueDate < new Date(nextWeekStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+                });
+
+                const formatTasks = (tasks) => {
+                    return tasks.map(row => `**Task:** ${row.Task}\n**Due Date:** ${row['Due Date']}\n**Status:** ${row.Status}\n**Assigned To:** ${row['Assigned To']}\n**Notes:** ${row.Notes}`).join('\n\n');
+                };
+
+                const thisWeekFormattedData = formatTasks(thisWeekTasks);
+                const nextWeekFormattedData = formatTasks(nextWeekTasks);
+
+                if (thisWeekFormattedData.length > 0 || nextWeekFormattedData.length > 0) {
+                    responseMessages.push(`**To-Do for ${sheetName}:**\n\n**This Week:**\n${thisWeekFormattedData}\n\n**Next Week:**\n${nextWeekFormattedData}`);
                 }
             }
 
