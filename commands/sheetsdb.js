@@ -12,10 +12,10 @@ module.exports = {
             await interaction.reply({ content: "Fetching data from the spreadsheet...", ephemeral: true });
 
             const threadIds = {
-                'Chassis': '', //1192481865056137247
-                'Controls': '', //1192508568927219773
-                'Drivetrain': '', //1192666172664053891
-                'Suspension': '', //1192708198881308772
+                'Chassis': '1192481865056137247', //1192481865056137247
+                'Controls': '1192508568927219773', //1192508568927219773
+                'Drivetrain': '1192666172664053891', //1192666172664053891
+                'Suspension': '1192708198881308772', //1192708198881308772
                 'DAQ': '1192706895614582885',
             };
 
@@ -47,15 +47,14 @@ module.exports = {
             
                 const sheetData = response.data.values.slice(1);
             
-            
                 const currentDate = new Date();
                 currentDate.setHours(0, 0, 0, 0);
                 const thisWeekStartDate = new Date(currentDate);
                 const thisWeekEndDate = new Date(currentDate);
                 thisWeekEndDate.setDate(currentDate.getDate() + (7 - currentDate.getDay()));
+                
                 const nextWeekStartDate = new Date(thisWeekEndDate);
                 nextWeekStartDate.setDate(thisWeekEndDate.getDate() + 1);
-            
                 const nextWeekEndDate = new Date(nextWeekStartDate);
                 nextWeekEndDate.setDate(nextWeekStartDate.getDate() + 7);
             
@@ -117,7 +116,7 @@ function formatTasks(tasks, sheetName, sheetColor, timeFrame) {
         .addFields(
             tasks.map(row => ({
                 name: timeFrame.toLowerCase() === 'next week' ? '\u200B' : `__**${row.Task}**__`,
-                value: timeFrame.toLowerCase() === 'next week' ? `     ${row.Task}     ` : `**Task ID:** ${row['ID']}\n> **Start Date:** ${row['Start Date']}\n> **Due Date:** ${row['Due Date']}\n> **Status:** ${row.Status}\n> **Assigned To:** ${row['Assigned To']}\n> **Notes:** ${row.Notes}`,
+                value: timeFrame.toLowerCase() === 'next week' ? `       ${row.Task}       ` : `**Task ID:** ${row['ID']}\n> **Start Date:** ${row['Start Date']}\n> **Due Date:** ${row['Due Date']}\n> **Status:** ${row.Status}\n> **Assigned To:** ${row['Assigned To']}\n> **Notes:** ${row.Notes}`,
                 inline: timeFrame.toLowerCase() === 'next week',
             }))
         )

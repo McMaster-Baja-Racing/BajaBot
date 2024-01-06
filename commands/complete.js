@@ -45,7 +45,7 @@ module.exports = {
                         },
                     });
 
-                    interaction.reply(`Task with ID ${taskId} marked as completed in ${sheetName} tab.`);
+                    interaction.reply(`${sheetName} task with ID ${taskId} marked as completed.`);
                     return;
                 }
             }

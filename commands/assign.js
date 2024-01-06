@@ -46,7 +46,7 @@ module.exports = {
                         },
                     });
 
-                    interaction.reply(`Task with ID ${taskId} assigned to ${memberNickname} in ${sheetName} tab.`);
+                    interaction.reply(`${sheetName} task with ID ${taskId} assigned to ${memberNickname}.`);
                     return;
                 }
             }
