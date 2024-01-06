@@ -120,7 +120,8 @@ function formatTasks(tasks, sheetName, sheetColor, timeFrame) {
                 inline: timeFrame.toLowerCase() === 'next week',
             }))
         )
-        .setFooter({ text: timeFrame.toLowerCase() === 'next week' ? `Prepare to get these tasks done next week!` : `Try to get these tasks done ${timeFrame.toLowerCase()}!` });
+        .setDescription( timeFrame.toLowerCase() === 'next week' ? `Prepare to get these tasks done next week!` : `Try to get these tasks done ${timeFrame.toLowerCase()}!` )
+        .setFooter({text: 'Use /help for instructions on how to use this To-Do list!'});
 
     return embed;
 }

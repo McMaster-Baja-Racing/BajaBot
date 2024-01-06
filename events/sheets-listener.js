@@ -137,7 +137,8 @@ function formatTasks(tasks, sheetName, sheetColor) {
         value: `**Task ID:** ${row['ID']}\n> **Start Date:** ${row['Start Date']}\n> **Due Date:** ${row['Due Date']}\n> **Status:** ${row.Status}\n> **Assigned To:** ${row['Assigned To']}\n> **Notes:** ${row.Notes}`,
       }))
     )
-    .setFooter({ text: `Try to get these tasks done this week!` });
+    .setDescription( `Try to get these tasks done this week!` )
+    .setFooter({text: 'Use /help for instructions on how to use this To-Do list!'});
 
   return embed;
 }
