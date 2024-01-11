@@ -22,7 +22,7 @@ module.exports = {
             const taskId = interaction.options.getString('id');
             const memberNickname = interaction.member.nickname || interaction.member.user.username;
 
-            const sheetNames = ['Chassis', 'Controls', 'Drivetrain', 'Suspension', 'DAQ'];
+            const sheetNames = ['2023 Car', '2021 Car', 'Chassis', 'Controls', 'Drivetrain', 'Suspension', 'DAQ'];
 
             for (const sheetName of sheetNames) {
                 const range = `${sheetName}!A:Z`;
