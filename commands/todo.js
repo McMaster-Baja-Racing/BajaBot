@@ -1,7 +1,7 @@
 const { google } = require('googleapis');
 const { SlashCommandBuilder } = require('discord.js');
 const { EmbedBuilder } = require('discord.js');
-const { subteamData } = require('../models/data'); // colors and thread IDs for each tab
+const { subteamData } = require('../models/data'); // Colors and thread IDs for each tab
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -11,7 +11,7 @@ module.exports = {
     async execute(interaction) {
         try {
 
-            // Send silly little secret message to show you that it is doing something i guess
+            // Send silly little secret message to show you that it is doing something I guess
             await interaction.reply({ content: "Fetching data from the spreadsheet...", ephemeral: true });
 
             // Google authentication stuff
@@ -74,7 +74,7 @@ module.exports = {
             for (const { tab, formattedData } of responseEmbeds) {
                 const threadID = subteamData[tab].thread;
                 if (threadID) {
-                    const forumThread = await interaction.channel.threads.fetch(threadID); // Change 'thread' to 'threadID'
+                    const forumThread = await interaction.channel.threads.fetch(threadID); 
                     if (forumThread) {
                         await forumThread.send({ embeds: [formattedData] });
                     } else {
@@ -114,7 +114,7 @@ function calculateDates(currentDate) {
     currentDate.setHours(0, 0, 0, 0);
 
     const thisWeekStartDate = new Date(currentDate);
-    
+
     const thisWeekEndDate = new Date(currentDate);
     thisWeekEndDate.setDate(currentDate.getDate() + (7 - currentDate.getDay()));
 
