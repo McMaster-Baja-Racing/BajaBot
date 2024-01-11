@@ -64,8 +64,8 @@ module.exports = {
                     return (dueDate >= nextWeekStartDate && dueDate < nextWeekEndDate);
                 });
 
-                const thisWeekFormattedData = formatTasks(thisWeekTasks, tab, color, 'This Week');
-                const nextWeekFormattedData = formatTasks(nextWeekTasks, tab, color, 'Next Week');
+                const thisWeekFormattedData = formatTasks(thisWeekTasks, tab, color, 'This Week', columns);
+                const nextWeekFormattedData = formatTasks(nextWeekTasks, tab, color, 'Next Week', columns);
 
                 responseEmbeds.push({ tab, formattedData: thisWeekFormattedData });
                 responseEmbeds.push({ tab, formattedData: nextWeekFormattedData });
@@ -90,7 +90,7 @@ module.exports = {
     }
 };
 
-function formatTasks(tasks, tab, color, timeFrame) {
+function formatTasks(tasks, tab, color, timeFrame, columns) {
     const embed = new EmbedBuilder()
         .setColor(color)
         .setURL('https://docs.google.com/spreadsheets/d/1pb2W0BvAOMFeM4AXIbLzxM0dWJGYtqago8_8J4S5wEI/edit#gid=490843265')
@@ -98,13 +98,23 @@ function formatTasks(tasks, tab, color, timeFrame) {
         .setThumbnail('https://i.imgur.com/ALT9CPo.jpg')
         .setTitle(`${tab}: ${timeFrame}`)
         .addFields(
-            tasks.map(row => ({
-                name: timeFrame.toLowerCase() === 'next week' ? '\u200B' : `__**${row.Task}**__`,
-                value: timeFrame.toLowerCase() === 'next week' ? `       ${row.Task}       ` : `**Task ID:** ${row['ID']}\n> **Start Date:** ${row['Start Date']}\n> **Due Date:** ${row['Due Date']}\n> **Status:** ${row.Status}\n> **Assigned To:** ${row['Assigned To']}\n> **Notes:** ${row.Notes}`,
-                inline: timeFrame.toLowerCase() === 'next week',
-            }))
+            tasks.map(row => {
+                const field = {
+                    name: timeFrame.toLowerCase() === 'next week' ? '\u200B' : `__**${row.Task}**__`,
+                    value: timeFrame.toLowerCase() === 'next week' ? `       ${row.Task}       ` : '',
+                    inline: timeFrame.toLowerCase() === 'next week',
+                };
+
+                columns.forEach(columnName => {
+                    if (columnName !== 'Task' && timeFrame.toLowerCase() === 'this week') {
+                        field.value += `**${columnName}:** ${row[columnName]}\n`;
+                    }
+                });
+
+                return field;
+            })
         )
-        .setDescription( timeFrame.toLowerCase() === 'next week' ? `Prepare to get these tasks done next week!` : `Try to get these tasks done ${timeFrame.toLowerCase()}!` )
+        .setDescription(timeFrame.toLowerCase() === 'next week' ? `Prepare to get these tasks done next week!` : `Try to get these tasks done ${timeFrame.toLowerCase()}!`)
         .setFooter({text: 'Use /help for instructions on how to use this To-Do list!'});
 
     return embed;
