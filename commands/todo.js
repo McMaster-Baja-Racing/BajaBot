@@ -107,7 +107,7 @@ function formatTasks(tasks, tab, color, timeFrame, columns) {
 
                 columns.forEach(columnName => {
                     if (columnName !== 'Task' && timeFrame.toLowerCase() === 'this week') {
-                        field.value += `**${columnName}:** ${row[columnName]}\n`;
+                        field.value += `> **${columnName}:** ${row[columnName]}\n`;
                     }
                 });
 
