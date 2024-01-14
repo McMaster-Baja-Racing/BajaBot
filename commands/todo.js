@@ -23,8 +23,12 @@ module.exports = {
             const spreadsheetId = '1pb2W0BvAOMFeM4AXIbLzxM0dWJGYtqago8_8J4S5wEI';
             
             // Get a list of the names of all the tabs
-            const response = await sheets.spreadsheets.get({spreadsheetId,});
-            const tabs = response.data.sheets.map(sheet => sheet.properties.title);
+            const response = await sheets.spreadsheets.get({ spreadsheetId });
+            
+            // Filter out the 'Message IDs' tab from the list of tabs
+            const tabs = response.data.sheets
+                .map(sheet => sheet.properties.title)
+                .filter(tab => tab !== 'Message IDs');
 
             const responseEmbeds = [];
 
@@ -32,19 +36,18 @@ module.exports = {
             for (const tab of tabs) {
 
                 const range = tab;
-
                 const threadID = subteamData[tab].thread; // Use threadID from ../models/data.js
                 const color = subteamData[tab].color; // Use color from ../models/data.js
-            
-                const sheetValuesResponse = await sheets.spreadsheets.values.get({spreadsheetId, range,});
+
+                const sheetValuesResponse = await sheets.spreadsheets.values.get({ spreadsheetId, range });
                 const sheetData = sheetValuesResponse.data.values.slice(1);
-                
+
                 // Get a list of the names of all the columns
                 const columns = sheetValuesResponse.data.values[0];
-            
+
                 const currentDate = new Date();
                 const [thisWeekStartDate, thisWeekEndDate, nextWeekStartDate, nextWeekEndDate] = calculateDates(currentDate);
-            
+
                 // Create an array of task objects, each task object is basically a row of the spreadsheet, keys are column names
                 const sheetRows = sheetData.map(row => {
                     const taskObject = {};
@@ -53,12 +56,12 @@ module.exports = {
                     });
                     return taskObject;
                 });
-        
+
                 const thisWeekTasks = sheetRows.filter(row => {
                     const dueDate = new Date(row['Due Date']);
                     return (dueDate >= thisWeekStartDate && dueDate <= thisWeekEndDate);
                 });
-            
+
                 const nextWeekTasks = sheetRows.filter(row => {
                     const dueDate = new Date(row['Due Date']);
                     return (dueDate >= nextWeekStartDate && dueDate < nextWeekEndDate);
@@ -74,7 +77,7 @@ module.exports = {
             for (const { tab, formattedData } of responseEmbeds) {
                 const threadID = subteamData[tab].thread;
                 if (threadID) {
-                    const forumThread = await interaction.channel.threads.fetch(threadID); 
+                    const forumThread = await interaction.channel.threads.fetch(threadID);
                     if (forumThread) {
                         await forumThread.send({ embeds: [formattedData] });
                     } else {
@@ -94,7 +97,7 @@ function formatTasks(tasks, tab, color, timeFrame, columns) {
     const embed = new EmbedBuilder()
         .setColor(color)
         .setURL('https://docs.google.com/spreadsheets/d/1pb2W0BvAOMFeM4AXIbLzxM0dWJGYtqago8_8J4S5wEI/edit#gid=490843265')
-        .setAuthor({ name: 'To-Do Reminder', iconURL: 'https://i.imgur.com/ALT9CPo.jpg'})
+        .setAuthor({ name: 'To-Do Reminder', iconURL: 'https://i.imgur.com/ALT9CPo.jpg' })
         .setThumbnail('https://i.imgur.com/ALT9CPo.jpg')
         .setTitle(`${tab}: ${timeFrame}`)
         .addFields(
@@ -115,7 +118,7 @@ function formatTasks(tasks, tab, color, timeFrame, columns) {
             })
         )
         .setDescription(timeFrame.toLowerCase() === 'next week' ? `Prepare to get these tasks done next week!` : `Try to get these tasks done ${timeFrame.toLowerCase()}!`)
-        .setFooter({text: 'Use /help for instructions on how to use this To-Do list!'});
+        .setFooter({ text: 'Use /help for instructions on how to use this To-Do list!' });
 
     return embed;
 }

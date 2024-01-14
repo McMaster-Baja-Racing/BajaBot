@@ -1,16 +1,6 @@
-// This is admittedly really dumb but I couldn't think of a better way rn and I just wanted to get it working
-// There's probably a better way
-
 const { EmbedBuilder } = require('discord.js');
 const { google } = require('googleapis');
-
-const threadIds = {
-  'Chassis': '1192481865056137247',
-  'Controls': '1192508568927219773',
-  'Drivetrain': '1192666172664053891',
-  'Suspension': '1192708198881308772',
-  'DAQ': '1192706895614582885',
-};
+const { subteamData } = require('../models/data');
 
 module.exports = {
   name: 'messageCreate',
@@ -20,13 +10,15 @@ module.exports = {
     if (message.author.id === client.user.id) {
       console.log('Message is from the bot.');
 
-      if (message.content.includes('task with ID')) {
+      // Check if the message contains 'task with ID' anywhere
+      if (/task with ID/i.test(message.content)) {
         console.log('Message contains "task with ID".');
 
         const channelKeyword = getChannelKeyword(message.content);
 
-        if (channelKeyword && threadIds[channelKeyword]) {
-          const targetThreadId = threadIds[channelKeyword];
+        if (channelKeyword && subteamData[channelKeyword]) {
+
+          const { thread: targetThreadId, color: sheetColor } = subteamData[channelKeyword];
           const targetThread = message.guild.channels.cache.get(targetThreadId);
 
           if (targetThread) {
@@ -42,7 +34,6 @@ module.exports = {
             
             const secondMostRecentEmbed = sortedEmbeds[1];
 
-
             if (secondMostRecentEmbed) {
               console.log(`Found second-to-last embed message in ${targetThread.name}`);
               const auth = await google.auth.getClient({
@@ -55,16 +46,6 @@ module.exports = {
               const sheets = google.sheets({ version: 'v4', auth });
               const spreadsheetId = '1pb2W0BvAOMFeM4AXIbLzxM0dWJGYtqago8_8J4S5wEI';
 
-              const responseEmbeds = [];
-
-              const sheetColorMap = {
-                'Chassis': 0x71368A,
-                'Controls': 0x1ABC9C,
-                'Drivetrain': 0xF1C40F,
-                'Suspension': 0x2ECC71,
-                'DAQ': 0x3498DB,
-              };
-
               try {
                 const sheetName = channelKeyword; 
                 console.log(`Processing sheet: ${sheetName}`);
@@ -74,28 +55,25 @@ module.exports = {
                 });
 
                 console.log(`Got response for sheet: ${sheetName}`);
-                const sheetData = response.data.values.slice(1);
+                // Get a list of the names of all the columns
+                const columns = sheetValuesResponse.data.values[0];
+            
                 const currentDate = new Date();
-                currentDate.setHours(0, 0, 0, 0);
-                const thisWeekStartDate = new Date(currentDate);
-                const thisWeekEndDate = new Date(currentDate);
-                thisWeekEndDate.setDate(currentDate.getDate() + (7 - currentDate.getDay()));
+                const [thisWeekStartDate, thisWeekEndDate, nextWeekStartDate, nextWeekEndDate] = calculateDates(currentDate);
+            
+                // Create an array of task objects, each task object is basically a row of the spreadsheet, keys are column names
+                const sheetRows = sheetData.map(row => {
+                    const taskObject = {};
+                    columns.forEach((columnName, index) => {
+                        taskObject[columnName] = row[index];
+                    });
+                    return taskObject;
+                });
 
-                const sheetRows = sheetData.map(row => ({
-                  'Task': row[0],
-                  'Start Date': row[1],
-                  'Due Date': row[2],
-                  'Status': row[3],
-                  'Assigned To': row[4],
-                  'Notes': row[5],
-                  'ID': row[6],
-                }));
-
-                const sheetColor = sheetColorMap[sheetName];
                 const thisWeekTasks = sheetRows.filter(row => {
                   const dueDate = new Date(row['Due Date']);
                   return (dueDate >= thisWeekStartDate && dueDate <= thisWeekEndDate);
-                });
+              });
 
                 console.log(`Processed sheet data for: ${sheetName}`);
                 const updatedEmbed = formatTasks(thisWeekTasks, sheetName, sheetColor);
@@ -112,7 +90,7 @@ module.exports = {
             console.log(`Hardcoded thread not found or not a GUILD_TEXT channel.`);
           }
         } else {
-          console.log(`Channel keyword not recognized or corresponding thread ID not found.`);
+          console.log(`Channel keyword not recognized or corresponding data not found.`);
         }
       }
     }
@@ -141,4 +119,21 @@ function formatTasks(tasks, sheetName, sheetColor) {
     .setFooter({text: 'Use /help for instructions on how to use this To-Do list!'});
 
   return embed;
+}
+
+function calculateDates(currentDate) {
+  currentDate.setHours(0, 0, 0, 0);
+
+  const thisWeekStartDate = new Date(currentDate);
+
+  const thisWeekEndDate = new Date(currentDate);
+  thisWeekEndDate.setDate(currentDate.getDate() + (7 - currentDate.getDay()));
+
+  const nextWeekStartDate = new Date(thisWeekEndDate);
+  nextWeekStartDate.setDate(thisWeekEndDate.getDate() + 1);
+
+  const nextWeekEndDate = new Date(nextWeekStartDate);
+  nextWeekEndDate.setDate(nextWeekStartDate.getDate() + 7);
+
+  return [thisWeekStartDate, thisWeekEndDate, nextWeekStartDate, nextWeekEndDate];
 }
