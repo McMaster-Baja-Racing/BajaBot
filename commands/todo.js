@@ -1,7 +1,7 @@
 const { google } = require('googleapis');
 const { SlashCommandBuilder } = require('discord.js');
 const { EmbedBuilder } = require('discord.js');
-const { subteamData } = require('../models/data'); // Colors and thread IDs for each tab
+const { subteamData, excludedTabs } = require('../models/data'); // Colors and thread IDs for each tab, tabs to ignore
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -25,11 +25,12 @@ module.exports = {
             // Get a list of the names of all the tabs
             const response = await sheets.spreadsheets.get({ spreadsheetId });
             
-            // Filter out the 'Message IDs' tab from the list of tabs
+            // Filter out the excludedTabs (specified in ../models/data.js) from the list of tabs
             const tabs = response.data.sheets
-                .map(sheet => sheet.properties.title)
-                .filter(tab => tab !== 'Message IDs');
+            .map(sheet => sheet.properties.title)
+            .filter(tab => !excludedTabs.includes(tab));
 
+            // To store embeds the bot will send
             const responseEmbeds = [];
 
             // Iterate over the tabs
@@ -45,6 +46,7 @@ module.exports = {
                 // Get a list of the names of all the columns
                 const columns = sheetValuesResponse.data.values[0];
 
+                // Date calculations
                 const currentDate = new Date();
                 const [thisWeekStartDate, thisWeekEndDate, nextWeekStartDate, nextWeekEndDate] = calculateDates(currentDate);
 
@@ -57,23 +59,28 @@ module.exports = {
                     return taskObject;
                 });
 
+                // This week stuff
                 const thisWeekTasks = sheetRows.filter(row => {
                     const dueDate = new Date(row['Due Date']);
                     return (dueDate >= thisWeekStartDate && dueDate <= thisWeekEndDate);
                 });
 
+                // Next week stuff
                 const nextWeekTasks = sheetRows.filter(row => {
                     const dueDate = new Date(row['Due Date']);
                     return (dueDate >= nextWeekStartDate && dueDate < nextWeekEndDate);
                 });
 
+                // Format the embeds
                 const thisWeekFormattedData = formatTasks(thisWeekTasks, tab, color, 'This Week', columns);
                 const nextWeekFormattedData = formatTasks(nextWeekTasks, tab, color, 'Next Week', columns);
 
+                // Push to array of response embeds
                 responseEmbeds.push({ tab, formattedData: thisWeekFormattedData });
                 responseEmbeds.push({ tab, formattedData: nextWeekFormattedData });
             }
 
+            // Send the embeds to the appropriate thread
             for (const { tab, formattedData } of responseEmbeds) {
                 const threadID = subteamData[tab].thread;
                 if (threadID) {
@@ -93,6 +100,7 @@ module.exports = {
     }
 };
 
+// Builds the embeds
 function formatTasks(tasks, tab, color, timeFrame, columns) {
     const embed = new EmbedBuilder()
         .setColor(color)
@@ -123,6 +131,7 @@ function formatTasks(tasks, tab, color, timeFrame, columns) {
     return embed;
 }
 
+// Calculates dates for this week/next week stuff
 function calculateDates(currentDate) {
     currentDate.setHours(0, 0, 0, 0);
 

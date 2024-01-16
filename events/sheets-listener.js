@@ -1,3 +1,6 @@
+// This is broken currently
+// Will change it to work with Google API listener instead of listening for a discord message
+
 const { EmbedBuilder } = require('discord.js');
 const { google } = require('googleapis');
 const { subteamData } = require('../models/data');
