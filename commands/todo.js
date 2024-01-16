@@ -84,14 +84,14 @@ module.exports = {
             for (const { tab, formattedData } of responseEmbeds) {
                 const threadID = subteamData[tab].thread;
                 if (threadID) {
-                    const forumThread = await interaction.channel.threads.fetch(threadID);
+                    const forumThread = await interaction.guild.channels.fetch(threadID);
                     if (forumThread) {
                         await forumThread.send({ embeds: [formattedData] });
                     } else {
-                        console.error(`Thread not found for sheet: ${tab}`);
+                        console.error(`Channel not found for sheet: ${tab}`);
                     }
                 } else {
-                    console.error(`Thread ID not defined for sheet: ${tab}`);
+                    console.error(`Channel ID not defined for sheet: ${tab}`);
                 }
             }
         } catch (error) {
