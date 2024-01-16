@@ -27,8 +27,8 @@ module.exports = {
             
             // Filter out the excludedTabs (specified in ../models/data.js) from the list of tabs
             const tabs = response.data.sheets
-            .map(sheet => sheet.properties.title)
-            .filter(tab => !excludedTabs.includes(tab));
+                .map(sheet => sheet.properties.title)
+                .filter(tab => !excludedTabs.includes(tab));
 
             // To store embeds the bot will send
             const responseEmbeds = [];
