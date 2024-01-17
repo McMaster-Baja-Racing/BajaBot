@@ -21,7 +21,7 @@ const subteamData = {
     },
     'Drivetrain': {
         color: 0xF1C40F, // yellow
-        thread: '1196998022211584141', //1196998022211584141
+        thread: '', //1196998022211584141
     },
     'Suspension': {
         color: 0x2ECC71, // green
