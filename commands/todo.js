@@ -9,14 +9,13 @@ module.exports = {
         .setDescription('Sends to-do lists for each subteam to their respective forum threads.')
         .addStringOption(option =>
             option.setName('subteam')
-                .setDescription('(Optional) specify one subteam to update reminders for,')
+                .setDescription('(Optional) specify one subteam to update reminders for.')
                 .setRequired(false)),
 
     async execute(interaction) {
         const subteamOption = interaction.options.getString('subteam');
 
         try {
-
             // Send silly little secret message to show you that it is doing something I guess
             await interaction.reply({ content: "Fetching data from the spreadsheet...", ephemeral: true });
 
@@ -100,19 +99,52 @@ module.exports = {
             }
 
             // Send the embeds to the appropriate thread
+            let currentRow = 2; // Initialize the current row to 2 for the second row
+
             for (const { tab, formattedData } of responseEmbeds) {
                 const threadID = subteamData[tab].thread;
                 if (threadID) {
-                    const forumThread = await interaction.guild.channels.fetch(threadID);
+                    const forumThread = await interaction.channel.threads.fetch(threadID);
                     if (forumThread) {
-                        await forumThread.send({ embeds: [formattedData] });
+                        const sentMessage = await forumThread.send({ embeds: [formattedData] });
+            
+                        // Log the message ID
+                        console.log(`Message ID for ${tab}: ${sentMessage.id}`);
+            
+                        // Find the column index corresponding to the 'tab'
+                        const columnIndex = response.data.sheets.findIndex(sheet => sheet.properties.title === tab);
+            
+                        if (columnIndex !== -1) {
+                            // Get the column letter (A, B, C, ...)
+                            const columnLetter = String.fromCharCode('A'.charCodeAt(0) + columnIndex);
+            
+                            // Build the range to update with the current row
+                            const rangeToUpdate = `Message IDs!${columnLetter}${currentRow}`;
+            
+                            // Build the values to update
+                            const valuesToUpdate = [[sentMessage.id]];
+            
+                            // Update the spreadsheet
+                            await sheets.spreadsheets.values.update({
+                                spreadsheetId,
+                                range: rangeToUpdate,
+                                valueInputOption: 'RAW',
+                                resource: { values: valuesToUpdate },
+                            });
+            
+                            // Alternate between the second and third rows for the next iteration
+                            currentRow = currentRow === 2 ? 3 : 2;
+                        } else {
+                            console.error(`Column index not found for sheet: ${tab}`);
+                        }
                     } else {
-                        console.error(`Channel not found for sheet: ${tab}`);
+                        console.error(`Thread not found for sheet: ${tab}`);
                     }
                 } else {
-                    console.error(`Channel ID not defined for sheet: ${tab}`);
+                    console.error(`Thread ID not defined for sheet: ${tab}`);
                 }
             }
+            
         } catch (error) {
             console.error('Error fetching data from Google Sheets:', error);
         }
