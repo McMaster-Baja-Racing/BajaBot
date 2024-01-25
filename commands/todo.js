@@ -1,7 +1,7 @@
 const { google } = require('googleapis');
 const { SlashCommandBuilder } = require('discord.js');
 const { subteamData, excludedTabs } = require('../models/data'); // Colors and thread IDs for each tab, tabs to ignore
-const { formatTasks, calculateDates } = require('../models/todoHelpers'); 
+const { formatTasks, calculateDates, authenticate, spreadsheetId, getTabs, buildThisWeekEmbed, buildNextWeekEmbed } = require('../models/sheetsHelper'); 
 
 
 module.exports = {
@@ -19,35 +19,13 @@ module.exports = {
         try {
             // Send silly little secret message to show you that it is doing something I guess
             await interaction.reply({ content: "Fetching data from the spreadsheet...", ephemeral: true });
-
-            // Google authentication stuff
-            const auth = await google.auth.getClient({
-                keyFile: './credentials/baja-to-do-bot-fef8bb884c17.json',
-                scopes: 'https://www.googleapis.com/auth/spreadsheets',
-            });
-            const sheets = google.sheets({ version: 'v4', auth });
-            const spreadsheetId = '1pb2W0BvAOMFeM4AXIbLzxM0dWJGYtqago8_8J4S5wEI';
-                
-            // Get a list of the names of all the tabs
-            const response = await sheets.spreadsheets.get({ spreadsheetId });
             
-            let tabs;
-            if(subteamOption){
-                // If subteamOption, tabs array will only have the one relevant tab
-                const subteamTab = subteamOption.toLowerCase();
-                const foundTab = response.data.sheets.find(sheet => sheet.properties.title.toLowerCase() === subteamTab);
-                if (foundTab) {
-                    tabs = [foundTab.properties.title];
-                } else {
-                    await interaction.reply({ content: `Subteam tab "${subteamOption}" not found.`, ephemeral: true });
-                    return;
-                }
-            }else{
-            // Filter out the excludedTabs (specified in ../models/data.js) from the list of tabs
-            tabs = response.data.sheets
-                .map(sheet => sheet.properties.title)
-                .filter(tab => !excludedTabs.includes(tab));
-            }
+            // Google authentication stuff
+            const sheets = await authenticate();
+
+            // Get a list of the names of the relevant tabs
+            const response = await sheets.spreadsheets.get({ spreadsheetId });
+            const tabs = await getTabs(response, subteamOption, excludedTabs);
 
             // To store embeds the bot will send
             const responseEmbeds = [];
@@ -78,25 +56,15 @@ module.exports = {
                     return taskObject;
                 });
 
-                // This week stuff
-                const thisWeekTasks = sheetRows.filter(row => {
-                    const dueDate = new Date(row['Due Date']);
-                    return (dueDate >= thisWeekStartDate && dueDate <= thisWeekEndDate);
-                });
+            // Build this week embed
+            const thisWeekFormattedData = await buildThisWeekEmbed(tab, color, columns, sheetRows, thisWeekStartDate, thisWeekEndDate);
 
-                // Next week stuff
-                const nextWeekTasks = sheetRows.filter(row => {
-                    const dueDate = new Date(row['Due Date']);
-                    return (dueDate >= nextWeekStartDate && dueDate < nextWeekEndDate);
-                });
+            // Build next week embed
+            const nextWeekFormattedData = await buildNextWeekEmbed(tab, color, columns, sheetRows, nextWeekStartDate, nextWeekEndDate);
 
-                // Format the embeds
-                const thisWeekFormattedData = formatTasks(thisWeekTasks, tab, color, 'This Week', columns);
-                const nextWeekFormattedData = formatTasks(nextWeekTasks, tab, color, 'Next Week', columns);
-
-                // Push to array of response embeds
-                responseEmbeds.push({ tab, formattedData: thisWeekFormattedData });
-                responseEmbeds.push({ tab, formattedData: nextWeekFormattedData });
+            // Push to array of response embeds
+            responseEmbeds.push({ tab, formattedData: thisWeekFormattedData });
+            responseEmbeds.push({ tab, formattedData: nextWeekFormattedData });
             }
 
             // Send the embeds to the appropriate thread

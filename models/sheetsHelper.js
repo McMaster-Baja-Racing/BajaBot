@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
+const { google } = require('googleapis');
 
 // Builds the embeds
 function formatTasks(tasks, tab, color, timeFrame, columns) {
@@ -47,9 +48,71 @@ function calculateDates(currentDate) {
     nextWeekEndDate.setDate(nextWeekStartDate.getDate() + 7);
 
     return [thisWeekStartDate, thisWeekEndDate, nextWeekStartDate, nextWeekEndDate];
+
+
 }
+
+// Authenticates with Google
+async function authenticate() {
+    try {
+        const auth = await google.auth.getClient({
+            keyFile: './credentials/baja-to-do-bot-fef8bb884c17.json',
+            scopes: 'https://www.googleapis.com/auth/spreadsheets',
+        });
+
+        return google.sheets({ version: 'v4', auth });
+    } catch (error) {
+        console.error('Error authenticating with Google Sheets:', error);
+        throw error;
+    }
+}
+
+// Gets relevant tabs, filters out the ones to exclude, if subteamOption only gets the one relevant tab
+const getTabs = async (response, subteamOption, excludedTabs) => {
+    if (subteamOption) {
+        const subteamTab = subteamOption.toLowerCase();
+        const foundTab = response.data.sheets.find(sheet => sheet.properties.title.toLowerCase() === subteamTab);
+        if (foundTab) {
+            return [foundTab.properties.title];
+        } else {
+            throw new Error(`Subteam tab "${subteamOption}" not found.`);
+        }
+    } else {
+        return response.data.sheets
+            .map(sheet => sheet.properties.title)
+            .filter(tab => !excludedTabs.includes(tab));
+    }
+};
+
+// Builds 'This Week' embed
+async function buildThisWeekEmbed(tab, color, columns, sheetRows, thisWeekStartDate, thisWeekEndDate) {
+    const thisWeekTasks = sheetRows.filter(row => {
+        const dueDate = new Date(row['Due Date']);
+        return (dueDate >= thisWeekStartDate && dueDate <= thisWeekEndDate);
+    });
+
+    return formatTasks(thisWeekTasks, tab, color, 'This Week', columns);
+}
+ 
+// Builds 'Next Week' embed
+async function buildNextWeekEmbed(tab, color, columns, sheetRows, nextWeekStartDate, nextWeekEndDate) {
+
+    const nextWeekTasks = sheetRows.filter(row => {
+        const dueDate = new Date(row['Due Date']);
+        return (dueDate >= nextWeekStartDate && dueDate < nextWeekEndDate);
+    });
+
+    return formatTasks(nextWeekTasks, tab, color, 'Next Week', columns);
+}
+
+const spreadsheetId = '1pb2W0BvAOMFeM4AXIbLzxM0dWJGYtqago8_8J4S5wEI';
 
 module.exports = {
     formatTasks,
     calculateDates,
+    authenticate,
+    spreadsheetId,
+    getTabs,
+    buildThisWeekEmbed,
+    buildNextWeekEmbed,
 };
