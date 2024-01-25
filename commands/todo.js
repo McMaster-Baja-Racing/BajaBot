@@ -6,9 +6,15 @@ const { subteamData, excludedTabs } = require('../models/data'); // Colors and t
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('todo')
-        .setDescription('Sends to-do lists for each subteam to their respective forum threads.'),
+        .setDescription('Sends to-do lists for each subteam to their respective forum threads.')
+        .addStringOption(option =>
+            option.setName('subteam')
+                .setDescription('(Optional) specify one subteam to update reminders for,')
+                .setRequired(false)),
 
     async execute(interaction) {
+        const subteamOption = interaction.options.getString('subteam');
+
         try {
 
             // Send silly little secret message to show you that it is doing something I guess
@@ -25,10 +31,23 @@ module.exports = {
             // Get a list of the names of all the tabs
             const response = await sheets.spreadsheets.get({ spreadsheetId });
             
+            let tabs;
+            if(subteamOption){
+                // If subteamOption, tabs array will only have the one relevant tab
+                const subteamTab = subteamOption.toLowerCase();
+                const foundTab = response.data.sheets.find(sheet => sheet.properties.title.toLowerCase() === subteamTab);
+                if (foundTab) {
+                    tabs = [foundTab.properties.title];
+                } else {
+                    await interaction.reply({ content: `Subteam tab "${subteamOption}" not found.`, ephemeral: true });
+                    return;
+                }
+            }else{
             // Filter out the excludedTabs (specified in ../models/data.js) from the list of tabs
-            const tabs = response.data.sheets
+            tabs = response.data.sheets
                 .map(sheet => sheet.properties.title)
                 .filter(tab => !excludedTabs.includes(tab));
+            }
 
             // To store embeds the bot will send
             const responseEmbeds = [];
