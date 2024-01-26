@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { google } = require('googleapis');
+const { subteamData, excludedTabs } = require('../models/data'); // Colors and thread IDs for each tab, tabs to ignore
 
 // Builds the embeds
 function formatTasks(tasks, tab, color, timeFrame, columns) {
@@ -105,7 +106,42 @@ async function buildNextWeekEmbed(tab, color, columns, sheetRows, nextWeekStartD
     return formatTasks(nextWeekTasks, tab, color, 'Next Week', columns);
 }
 
+// sheet id
 const spreadsheetId = '1pb2W0BvAOMFeM4AXIbLzxM0dWJGYtqago8_8J4S5wEI';
+
+// handles processing stuff from the sheet to build the embeds
+async function processSheetData(sheets, tab) {
+    const range = tab;
+    const threadID = subteamData[tab].thread; // Use threadID from ../models/data.js
+    const color = subteamData[tab].color; // Use color from ../models/data.js
+
+    const sheetValuesResponse = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+    const sheetData = sheetValuesResponse.data.values.slice(1);
+
+    // Get a list of the names of all the columns
+    const columns = sheetValuesResponse.data.values[0];
+
+    // Date calculations
+    const currentDate = new Date();
+    const [thisWeekStartDate, thisWeekEndDate, nextWeekStartDate, nextWeekEndDate] = calculateDates(currentDate);
+
+    // Create an array of task objects, each task object is basically a row of the spreadsheet, keys are column names
+    const sheetRows = sheetData.map(row => {
+        const taskObject = {};
+        columns.forEach((columnName, index) => {
+            taskObject[columnName] = row[index];
+        });
+        return taskObject;
+    });
+
+    // Build this week embed
+    const thisWeekFormattedData = await buildThisWeekEmbed(tab, color, columns, sheetRows, thisWeekStartDate, thisWeekEndDate);
+
+    // Build next week embed
+    const nextWeekFormattedData = await buildNextWeekEmbed(tab, color, columns, sheetRows, nextWeekStartDate, nextWeekEndDate);
+
+    return { tab, thisWeekFormattedData, nextWeekFormattedData };
+}
 
 module.exports = {
     formatTasks,
@@ -115,4 +151,5 @@ module.exports = {
     getTabs,
     buildThisWeekEmbed,
     buildNextWeekEmbed,
+    processSheetData,
 };
