@@ -3,7 +3,6 @@ const { SlashCommandBuilder } = require('discord.js');
 const { subteamData, excludedTabs } = require('../models/data'); // Colors and thread IDs for each tab, tabs to ignore
 const { formatTasks, calculateDates, authenticate, spreadsheetId, getTabs, buildThisWeekEmbed, buildNextWeekEmbed } = require('../models/sheetsHelper'); 
 
-
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('todo')

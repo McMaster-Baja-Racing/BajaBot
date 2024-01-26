@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { google } = require('googleapis');
-const { subteamData } = require('../models/data');
-const { formatTasks, calculateDates, authenticate, spreadsheetId } = require('../models/sheetsHelper'); 
+const { subteamData, excludedTabs } = require('../models/data');
+const { formatTasks, calculateDates, authenticate, spreadsheetId, buildThisWeekEmbed, getTabs } = require('../models/sheetsHelper');
 
 module.exports = {
   name: 'interactionCreate',
@@ -9,8 +9,8 @@ module.exports = {
     // Check if the interaction is a command
     if (!interaction.isCommand()) return;
 
-      // Google authentication stuff
-      const sheets = await authenticate();
+    // Google authentication stuff
+    const sheets = await authenticate();
 
     // Get the command
     const command = client.commands.get(interaction.commandName);
@@ -50,10 +50,40 @@ module.exports = {
           const message = await interaction.channel.messages.fetch(firstData);
 
           if (message) {
+            // Get a list of the names of the relevant tabs
+            const response = await sheets.spreadsheets.get({ spreadsheetId });
+            const tabs = await getTabs(response, name, excludedTabs);
+
+            let edited;
             // Edit the embed
-            edited = new EmbedBuilder()
-              .setTitle("IDK")
-              .toJSON();
+            for (const tab of tabs) {
+
+              const range = tab;
+              const threadID = subteamData[tab].thread; // Use threadID from ../models/data.js
+              const color = subteamData[tab].color; // Use color from ../models/data.js
+
+              const sheetValuesResponse = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+              const sheetData = sheetValuesResponse.data.values.slice(1);
+
+              // Get a list of the names of all the columns
+              const columns = sheetValuesResponse.data.values[0];
+
+              // Date calculations
+              const currentDate = new Date();
+              const [thisWeekStartDate, thisWeekEndDate, nextWeekStartDate, nextWeekEndDate] = calculateDates(currentDate);
+
+              // Create an array of task objects, each task object is basically a row of the spreadsheet, keys are column names
+              const sheetRows = sheetData.map(row => {
+                  const taskObject = {};
+                  columns.forEach((columnName, index) => {
+                      taskObject[columnName] = row[index];
+                  });
+                  return taskObject;
+              });
+
+          // Build this week embed
+           edited = await buildThisWeekEmbed(tab, color, columns, sheetRows, thisWeekStartDate, thisWeekEndDate);
+            }
 
             // Replace the existing embed with the new one
             await message.edit({ embeds: [edited] });
