@@ -1,0 +1,8 @@
+{
+    "intro": "## Hello {username}! Here are some instructions for using the To-Do lists:",
+    "masterSheetLink": "[The master google sheet for all the To-Dos can be found here](https://docs.google.com/spreadsheets/d/1pb2W0BvAOMFeM4AXIbLzxM0dWJGYtqago8_8J4S5wEI/edit#gid=822610725).",
+    "toDoLists": "### To-Do Lists\n- The bot will send a to-do list for your sub-team in the To-Do thread (in your sub-team's forum).\n...",
+    "completeCommand": "### /complete [id]\n- This will mark a task as complete.\n...",
+    "assignCommand": "### /assign [id]\n- This will assign you to a task.\n..."
+  }
+  
