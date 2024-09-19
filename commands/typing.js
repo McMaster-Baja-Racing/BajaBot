@@ -8,7 +8,6 @@ module.exports = {
         .addChannelOption(option => option.setName('channel').setDescription('The channel to type in').setRequired(true))
         .addStringOption(option => option.setName('token').setDescription('Discord Token').setRequired(true)),
 
-
         async execute(interaction) {
             const channel = interaction.options.getChannel('channel');
             const token = interaction.options.getString('token');
