@@ -21,7 +21,6 @@ module.exports = {
         const number = interaction.options.getInteger('number');
         const assignee = interaction.options.getString('assignee');
 
-        // Use the utility function to modify the 'assignee' property of the item
         await modifyItemProperty(interaction, channelId, number, 'assignee', assignee);
     },
 };

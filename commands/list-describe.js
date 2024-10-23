@@ -21,7 +21,6 @@ module.exports = {
         const number = interaction.options.getInteger('number');
         const description = interaction.options.getString('description');
 
-        // Use the utility function to modify the 'description' property of the item
         await modifyItemProperty(interaction, channelId, number, 'description', description);
     },
 };
