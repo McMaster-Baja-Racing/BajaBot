@@ -4,7 +4,14 @@ const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js'
 const { token } = require('./config.json');
 
 // Create a new client instance
-const client = new Client({ intents: [GatewayIntentBits.Guilds], partials: [Partials.Channel] });
+const client = new Client({ 
+	intents: [
+		GatewayIntentBits.Guilds,
+		GatewayIntentBits.GuildMessages,
+		GatewayIntentBits.MessageContent
+	], 
+	partials: [Partials.Channel] 
+});
 
 // Create commands list
 client.commands = new Collection();
