@@ -7,7 +7,8 @@ A discordJS bot to support the McMaster Baja Racing Organization
 {
     "clientId" : "",
     "guildId" : "",
-    "token" : ""
+    "token" : "",
+    "wikiApiKey": "",
 }
 ```
 Where the clientId is the ID of your bot, guildId is of your server and token is the bot token

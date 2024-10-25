@@ -28,6 +28,8 @@ const newPage = (attachmentName, mkdwnLink) => JSON.stringify({
     }`
 });
 
+const wikiUrl = 'http://wiki.mcmasterbaja.ca';
+
 module.exports = {
     name: Events.MessageCreate,
     async execute(message) {
@@ -43,13 +45,14 @@ module.exports = {
                     formData.append('mediaUpload', JSON.stringify({ folderId: WIKI_FOLDER }), { contentType: 'application/json' });
                     formData.append('mediaUpload', Buffer.from(data), { filename: attachment.name, contentType: 'application/pdf' });
 
-                    const uploadResponse = await axios.post('http://wiki.mcmasterbaja.ca/u', formData, {
+                    const uploadResponse = await axios.post(`${wikiUrl}/u`, formData, {
                         headers: { ...formData.getHeaders(), 'Authorization': `Bearer ${wikiApiKey}` },
                     });
 
                     if (uploadResponse.status === 200) {
                         console.log('PDF uploaded to Wiki.js');
-                        const mkdwnLink = `[${attachment.name}](/meeting-minutes/${attachment.name})`;
+                        const attachmentName = attachment.name.toLowerCase();
+                        const mkdwnLink = `[${attachmentName}](/meeting-minutes/${attachmentName})`;
 
                         const pageMutation = newPage(attachment.name, mkdwnLink);
                         const pageResponse = await axios.post('http://wiki.mcmasterbaja.ca/graphql', pageMutation, {
@@ -58,15 +61,15 @@ module.exports = {
 
                         if (pageResponse.status === 200) {
                             console.log('Page created successfully.');
-                            await message.reply({ content: `Page created successfully: ${mkdwnLink}`, ephemeral: true });
+                            await message.reply({ content: `Page created successfully: ${wikiUrl}/meeting-minutes/${attachment.name.replace('.pdf', '')}`, ephemeral: true });
                         } else {
                             console.log('Failed to create page:', pageResponse.data);
-                            await message.reply({ content: `Failed to create page for ${attachment.name}`, ephemeral: true });
+                            await message.reply({ content: `Failed to create page for ${attachment.name} with error message '${pageResponse.data}`, ephemeral: true });
                         }
                     }
                 } catch (error) {
                     console.error('Error processing PDF:', error.message);
-                    await message.reply({ content: `Error processing the PDF: ${attachment.name}`, ephemeral: true });
+                    await message.reply({ content: `Error processing the PDF: ${attachment.name} with error message '${error.message}'`, ephemeral: true });
                 }
             }));
         }
