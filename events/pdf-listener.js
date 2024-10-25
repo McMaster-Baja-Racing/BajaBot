@@ -55,13 +55,15 @@ module.exports = {
                         const mkdwnLink = `[${attachmentName}](/meeting-minutes/${attachmentName})`;
 
                         const pageMutation = newPage(attachment.name, mkdwnLink);
-                        const pageResponse = await axios.post('http://wiki.mcmasterbaja.ca/graphql', pageMutation, {
+                        const pageResponse = await axios.post(`${wikiUrl}/graphql`, pageMutation, {
                             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${wikiApiKey}` },
                         });
 
+                        const discordLink = `[here](${wikiUrl}/meeting-minutes/${attachment.name.replace('.pdf', '')})`;
+
                         if (pageResponse.status === 200) {
                             console.log('Page created successfully.');
-                            await message.reply({ content: `Page created successfully: ${wikiUrl}/meeting-minutes/${attachment.name.replace('.pdf', '')}`, ephemeral: true });
+                            await message.reply({ content: `Page with attachment located ${discordLink}.`, ephemeral: true });
                         } else {
                             console.log('Failed to create page:', pageResponse.data);
                             await message.reply({ content: `Failed to create page for ${attachment.name} with error message '${pageResponse.data}`, ephemeral: true });
