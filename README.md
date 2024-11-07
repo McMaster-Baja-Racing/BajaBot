@@ -18,6 +18,9 @@ Where the clientId is the ID of your bot, guildId is of your server, the token i
 4. Run `npm start` to begin hosting the bot
 4. Host index.js as long as you'd like to run the discord bot
 
+## Run with Docker
+1. Build the container with `docker build -t my-bot .`
+2. Run the container with `docker run -d my-bot`
 
 ## List of wanted features so far:
 ### Automatic reminders for meetings 
