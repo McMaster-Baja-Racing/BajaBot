@@ -5,38 +5,36 @@ const { token, githubToken } = require('../config.json');
 const POLLING_INTERVAL = 60000; 
 const PR_CHANNEL = '1303489918898540634';
 
+const ORG_NAME = 'McMaster-Baja-Racing';
+
+const REPOS = [
+    'Better-Data-Viewer',
+    'BajaBot',
+];
+
 const bot = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 let processedPRs = new Set();
 
 async function checkNewPRs() {
     try {
-        const response = await axios.get('https://api.github.com/user/repos', {
-            headers: {
-                Authorization: `Bearer ${githubToken}`,
-            },
-        });
-
-        for (const repo of response.data) {
-            const owner = repo.owner.login;
-            const name = repo.name;
-
-            const prResponse = await axios.get(`https://api.github.com/repos/${owner}/${name}/pulls`, {
+        for (const repo of REPOS) {
+            const response = await axios.get(`https://api.github.com/repos/${ORG_NAME}/${repo}/pulls`, {
                 headers: {
                     Authorization: `Bearer ${githubToken}`,
                 },
             });
 
-            prResponse.data.forEach(pr => {
+            response.data.forEach(pr => {
                 if (!processedPRs.has(pr.id)) {
-                    const message = `POGGERS! PR by ${pr.user.login} in ${name}: **${pr.title}**\n${pr.html_url}`;
+                    const message = `New PR by ${pr.user.login} in ${repo}: [**${pr.title}**](${pr.html_url})`;
                     const channel = bot.channels.cache.get(PR_CHANNEL);
                     if (channel) {
                         channel.send(message);
                     } else {
                         console.error(`Channel with ID ${PR_CHANNEL} not found.`);
                     }
-                    processedPRs.add(pr.id); 
+                    processedPRs.add(pr.id);
                 }
             });
         }
