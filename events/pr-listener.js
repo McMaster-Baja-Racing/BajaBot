@@ -10,6 +10,7 @@ const PR_ROLE = '1219273331166019654';
 const REPOS = [
     'Better-Data-Viewer',
     'BajaBot',
+    'DAQ_box',
 ];
 
 const bot = new Client({ intents: [GatewayIntentBits.Guilds] });
