@@ -8,9 +8,14 @@ const client = new Client({
 	intents: [
 		GatewayIntentBits.Guilds,
 		GatewayIntentBits.GuildMessages,
-		GatewayIntentBits.MessageContent
+		GatewayIntentBits.MessageContent,
+		GatewayIntentBits.GuildMessageReactions,
 	], 
-	partials: [Partials.Channel] 
+	partials: [
+		Partials.Message, 
+		Partials.Channel,
+		Partials.Reaction
+	]
 });
 
 // Create commands list
