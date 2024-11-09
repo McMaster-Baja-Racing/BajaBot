@@ -7,16 +7,20 @@ A discordJS bot to support the McMaster Baja Racing Organization
 {
     "clientId" : "",
     "guildId" : "",
-    "token" : ""
+    "token" : "",
+    "wikiApiKey": "",
 }
 ```
-Where the clientId is the ID of your bot, guildId is of your server and token is the bot token
+Where the clientId is the ID of your bot, guildId is of your server, the token is the bot token and the wikiApiKey is the api key gotten from the admin panel.
 
 2. Then, run `npm i` in order to install all node modules
 3. Run deploy-commands.js to send the commands to the discord server.
 4. Run `npm start` to begin hosting the bot
 4. Host index.js as long as you'd like to run the discord bot
 
+## Run with Docker
+1. Build the container with `docker build -t baja-sensei .`
+2. Run the container with `docker run -d baja-sensei`
 
 ## List of wanted features so far:
 ### Automatic reminders for meetings 
