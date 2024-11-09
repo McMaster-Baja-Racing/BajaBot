@@ -4,8 +4,8 @@ const { token, githubToken } = require('../config.json');
 
 const POLLING_INTERVAL = 60000; 
 const PR_CHANNEL = '1303489918898540634';
-
 const ORG_NAME = 'McMaster-Baja-Racing';
+const PR_ROLE = '1219273331166019654';
 
 const REPOS = [
     'Better-Data-Viewer',
@@ -27,7 +27,7 @@ async function checkNewPRs() {
 
             response.data.forEach(pr => {
                 if (!processedPRs.has(pr.id)) {
-                    const message = `New PR by ${pr.user.login} in ${repo}: [**${pr.title}**](${pr.html_url})`;
+                    const message = `<@&${PR_ROLE}> New PR by ${pr.user.login} in [**${repo}**](https://github.com/${ORG_NAME}/${repo}): [**${pr.title}**](${pr.html_url})`;
                     const channel = bot.channels.cache.get(PR_CHANNEL);
                     if (channel) {
                         channel.send(message);
