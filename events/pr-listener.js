@@ -1,13 +1,12 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 const axios = require('axios');
-const { differenceInDays } = require('date-fns');
 const { token, githubToken } = require('../config.json');
 
 const POLLING_INTERVAL = 60000;
 const PR_CHANNEL = '1303489918898540634';
 const ORG_NAME = 'McMaster-Baja-Racing';
 const PR_ROLE = '1219273331166019654';
-const REMINDER_DAYS = 1;
+const REMINDER_INTERVAL = 86400000; // 1 day 
 
 const REPOS = [
     'Better-Data-Viewer',
@@ -29,16 +28,15 @@ async function checkNewPRs() {
             });
 
             response.data.forEach(pr => {
-                const now = new Date();
+                const now = Date.now();
                 const firstSeen = processedPRs.get(pr.id);
 
                 if (!firstSeen) {
                     processedPRs.set(pr.id, now);
-                    notify(repo, pr, 'New');
-
-                } else if (differenceInDays(now, firstSeen) >= REMINDER_DAYS) {
-                    notify(repo, pr, 'Old');
-                    processedPRs.set(pr.id, now);
+                    notify(repo, pr, true);
+                } else if (now - firstSeen >= REMINDER_INTERVAL) {
+                    notify(repo, pr, false);
+                    processedPRs.set(pr.id, now); 
                 }
 
             });
@@ -48,9 +46,9 @@ async function checkNewPRs() {
     }
 }
 
-function notify(repo, pr, type) {
-    const messageType = type === 'New' ? 'New PR' : 'Reminder: PR';
-    const message = `<@&${PR_ROLE}> ${messageType} by ${pr.user.login} in [**${repo}**](https://github.com/${ORG_NAME}/${repo}): [**${pr.title}**](${pr.html_url})${type === 'Old' ? ' still needs review!' : ''}`;
+function notify(repo, pr, isNew) {
+    const messageType = isNew ? 'New PR' : 'Reminder: PR';
+    const message = `<@&${PR_ROLE}> ${messageType} by ${pr.user.login} in [**${repo}**](https://github.com/${ORG_NAME}/${repo}): [**${pr.title}**](${pr.html_url})${isNew ? '' : ' still needs review!'}`;
     const channel = bot.channels.cache.get(PR_CHANNEL);
 
     if (channel) {
