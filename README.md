@@ -9,9 +9,15 @@ A discordJS bot to support the McMaster Baja Racing Organization
     "guildId" : "",
     "token" : "",
     "wikiApiKey": "",
+    "githubToken": ""
 }
 ```
-Where the clientId is the ID of your bot, guildId is of your server, the token is the bot token and the wikiApiKey is the api key gotten from the admin panel.
+Where:
+- The clientId is the ID of your bot,
+- guildId is of your server, 
+- the token is the bot token,
+- the wikiApiKey is the api key from the admin panel of the Wiki, and
+- the githubToken is a (classic) personal access token for a GitHub account with access to the Baja Racing org
 
 2. Then, run `npm i` in order to install all node modules
 3. Run deploy-commands.js to send the commands to the discord server.
