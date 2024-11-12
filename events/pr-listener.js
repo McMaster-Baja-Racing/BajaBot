@@ -5,7 +5,6 @@ const { token, githubToken } = require('../config.json');
 const POLLING_INTERVAL = 60000;
 const PR_CHANNEL = '1303489918898540634';
 const ORG_NAME = 'McMaster-Baja-Racing';
-const PR_ROLE = '1219273331166019654';
 const REMINDER_INTERVAL = 86400000; // 1 day 
 
 const REPOS = [
@@ -48,7 +47,7 @@ async function checkNewPRs() {
 
 function notify(repo, pr, isNew) {
     const messageType = isNew ? 'New PR' : 'Reminder: PR';
-    const message = `<@&${PR_ROLE}> ${messageType} by ${pr.user.login} in [**${repo}**](https://github.com/${ORG_NAME}/${repo}): [**${pr.title}**](${pr.html_url})${isNew ? '' : ' still needs review!'}`;
+    const message = `${messageType} by ${pr.user.login} in [**${repo}**](https://github.com/${ORG_NAME}/${repo}): [**${pr.title}**](${pr.html_url})${isNew ? '' : ' still needs review!'}`;
     const channel = bot.channels.cache.get(PR_CHANNEL);
 
     if (channel) {
