@@ -26,7 +26,7 @@ Where:
 
 ## Run with Docker
 1. Build the container with `docker build -t baja-sensei .`
-2. Run the container with `docker run -d baja-sensei`
+2. Run the container with `docker run --restart unless-stopped -d baja-sensei`
 
 ## List of wanted features so far:
 ### Automatic reminders for meetings 
