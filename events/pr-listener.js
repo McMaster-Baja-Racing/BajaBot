@@ -27,6 +27,8 @@ async function checkNewPRs() {
             });
 
             response.data.forEach(pr => {
+                if (pr.draft) return; 
+                
                 const now = Date.now();
                 const firstSeen = processedPRs.get(pr.id);
 
