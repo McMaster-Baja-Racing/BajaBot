@@ -45,7 +45,8 @@ async function checkNewPRs() {
                     processedPRs.set(pr.id, now);
                     notify(repo, pr, true); 
                 } else if (now - firstSeen >= REMINDER_INTERVAL) {
-                    processedPRs.set(pr.id, now); 
+                    notify(repo,pr,false);
+                    processedPRs.set(pr.id, now);
                 }
             }
         }
