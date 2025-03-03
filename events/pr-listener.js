@@ -27,21 +27,29 @@ async function checkNewPRs() {
                 },
             });
 
-            response.data.forEach(pr => {
-                if (pr.draft) return; 
-                
+            for (const pr of response.data) {
+                if (pr.draft) continue; 
+
+                const reviewResponse = await axios.get(pr.reviews_url, {
+                    headers: { 
+                        Authorization: `Bearer ${githubToken}` 
+                    },
+                });
+
+                const isApproved = reviewResponse.data.some(review => review.state === 'APPROVED');
+                if (isApproved) continue;
+
                 const now = Date.now();
                 const firstSeen = processedPRs.get(pr.id);
 
                 if (!firstSeen) {
                     processedPRs.set(pr.id, now);
-                    notify(repo, pr, true);
+                    notify(repo, pr, true); 
                 } else if (now - firstSeen >= REMINDER_INTERVAL) {
-                    notify(repo, pr, false);
-                    processedPRs.set(pr.id, now); 
+                    notify(repo,pr,false);
+                    processedPRs.set(pr.id, now);
                 }
-
-            });
+            }
         }
     } catch (error) {
         console.error('Error fetching PRs:', error.message);
