@@ -1,0 +1,28 @@
+{
+  "birthdays": [
+    {
+      "userId": "330399856847880193",
+      "username": "gr812b",
+      "month": 10,
+      "day": 1,
+      "originalInput": "oct 1st, 2002",
+      "setDate": "2025-08-18T19:06:55.158Z"
+    },
+    {
+      "userId": "544341005420199937",
+      "username": "hy_droxy",
+      "month": 12,
+      "day": 27,
+      "originalInput": "december 27 2004",
+      "setDate": "2025-08-18T19:07:17.378Z"
+    },
+    {
+      "userId": "249268359793868800",
+      "username": "aone",
+      "month": 9,
+      "day": 8,
+      "originalInput": "september 8th 2002",
+      "setDate": "2025-08-20T14:54:00.138Z"
+    }
+  ]
+}
