@@ -33,6 +33,8 @@ const wikiUrl = 'http://wiki.mcmasterbaja.ca';
 module.exports = {
     name: Events.MessageCreate,
     async execute(message) {
+        if (message.author.bot) return;
+        
         if (message.channel.id === PDF_CHANNEL && message.attachments.size > 0) {
             await Promise.all(message.attachments.map(async (attachment) => {
                 if (attachment.contentType !== 'application/pdf') return;
