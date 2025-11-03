@@ -33,7 +33,6 @@ const wikiUrl = 'http://wiki.mcmasterbaja.ca';
 module.exports = {
     name: Events.MessageCreate,
     async execute(message) {
-        // Ignore messages from the bot itself to prevent loops
         if (message.author.bot) return;
         
         if (message.channel.id === PDF_CHANNEL && message.attachments.size > 0) {
